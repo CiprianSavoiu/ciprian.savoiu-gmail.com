@@ -1,0 +1,57 @@
+﻿@model MainHelp
+
+<!--begin::Modal-->
+<div class="modal fade" id="submitRequestInfo" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body mx-3">
+                <form asp-action="SubmitRequest">
+                    <div class="md-form mb-5">
+                        <i class="fas fa-user prefix grey-text"></i>
+                        <input asp-for="HelpRequest.Name" type="text" id="form34" class="form-control validate">
+                        <span asp-validation-for="HelpRequest.Name" class="form-text text-danger"> </span>
+                        <label data-error="wrong" data-success="right" for="form34">Your name</label>
+                    </div>
+
+                    <div class="md-form mb-5">
+                        <i class="fas fa-envelope prefix grey-text"></i>
+                        <input asp-for="HelpRequest.Email" type="email" id="form29" class="form-control validate">
+                   @*     <span asp-validation-for="HelpRequest.Email" class="form-text text-danger"> </span>*@
+                        <label data-error="wrong" data-success="right" for="form29">Your email</label>
+                    </div>
+
+                    <div class="md-form mb-5">
+                        <i class="fas fa-phone prefix grey-text"></i>
+                        <input asp-for="HelpRequest.Phone" type="text" id="form32" class="form-control validate">
+                        <span asp-validation-for="HelpRequest.Phone" class="form-text text-danger"> </span>
+                        <label data-error="wrong" data-success="right" for="form32">Your phone</label>
+                    </div>
+
+                    <div class="md-form">
+                        <i class="fas fa-pencil prefix grey-text"></i>
+                        <textarea asp-for="HelpRequest.Notes" type="text" id="form8" class="text-body form-control" rows="4"></textarea>
+                        <span asp-validation-for="HelpRequest.Notes" class="form-text text-danger"> </span>
+                        <label data-error="wrong" data-success="right" for="form8">Your message</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center" >
+                <div align="right">
+                    <button type="button" id="submitHelpRequest" data-save="modal" class="btn btn-success">
+                        Select location and Save
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--end::Modal-->
+
+

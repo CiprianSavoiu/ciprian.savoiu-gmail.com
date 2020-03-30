@@ -1,0 +1,310 @@
+﻿@model MainHelp
+
+
+@{
+    ViewData["Title"] = "Help Map";
+}
+
+<style>
+    .buttonsMenu {
+        line-height: 18px;
+        color: #555;
+    }
+
+        .buttonsMenu i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+</style>
+
+<div class="container-fluid">
+    <h2>Yorkshire Community Support Map</h2>
+    <p> The main purpose of this project is to help people who are in self-isolation or are in urgent need of support</p>
+</div>
+
+<div id="modal-placeholder"></div>
+
+<div class="row" style="position: relative">
+    <div id="mapid" style="width:1280px;  height:800px">
+    </div>
+</div>
+
+<partial name="_GetRequestInfo" />
+<partial name="_GetOfferInfo" />
+
+<script>
+
+
+    //load map 53.994937, -1.496892  54.009190, -1.461660
+    var coronaMap = L.map('mapid').setView([53.994937, -1.496892], 12);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+ //   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+	//attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+            maxZoom: 18,
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: 'pk.eyJ1IjoiY2lwcmlhbnNhdm9pdSIsImEiOiJjamdseHpqNzUyMnQ2MzNwZWZhemRmemhyIn0.xWtynjBMMayl-ZFrVSy3gA'
+        }).addTo(coronaMap);
+    //var divMarkers = L.DomUtil.get('markers');
+    
+    //load buttons menu
+    var buttonsMenu = L.control({position: 'topleft'});
+    buttonsMenu.onAdd = function(coronaMap) {
+        this._div = L.DomUtil.create('div', 'buttonsMenu');
+        this.update();
+        return this._div;
+    };
+    buttonsMenu.update = function() {
+        this._div.innerHTML = '<button class="btn btn-danger" style="width:200px" id="askHelp" data-toggle="modal" data-target="#submitRequestInfo">Ask for Support</button>' +
+            '<p></p><button class="btn btn-primary" style="width:200px" data-toggle="modal" data-target="#submitOfferInfo">Offer Support</button>';
+    };
+    buttonsMenu.addTo(coronaMap);
+    buttonsMenu.update();
+
+    //load offers
+    var modelOffer = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.HelpOffers));
+    modelOffer.forEach((offer) => {
+        var latlng = L.latLng(offer.Latitude, offer.Longitude);
+        var customMarker;
+
+        switch (offer.Category) {
+        case 0:
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-shopping-cart',
+                markerColor: 'blue',
+                prefix: 'fa'
+            });
+                break;
+        case 1:
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-plus-square',
+                markerColor: 'blue',
+                prefix: 'fa'
+            });
+                break;
+        case 2:
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-gbp',
+                markerColor: 'blue',
+                prefix: 'fa'
+            });
+            break;
+        default:
+            customMarker = L.ExtraMarkers.icon({
+                    icon: 'fa-info',
+                    markerColor: 'blue',
+                    prefix: 'fa'
+                });
+        }
+        var marker = new L.Marker(latlng, {icon: customMarker});
+        marker.bindPopup('<div class="modal-header text-center"><h5 class="modal-title w-100 font-weight-bold">' +
+            offer.Name +
+            '</h5></div>' +
+            '<div class="modal-body mx-3"><div class="md-form mb-5">' +
+            offer.Notes +
+            '</div></div>' +
+            '<div class="modal-footer mx-3"> Contact: </br>' +
+            offer.Phone + '</br>' + offer.WebAddress +
+            '</div>');
+        coronaMap.addLayer(marker);
+    });
+    //populate the requests
+    var modelRequest = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.HelpRequests));
+    modelRequest.forEach((request) => {
+        var latlng = L.latLng(request.Latitude, request.Longitude);
+        var customMarker;
+        //console.log(request.IsUrgent);
+        switch (request.IsUrgent.toString()) {
+        case 'true':
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-question',
+                markerColor: 'red',
+                shape: 'square',
+                prefix: 'fa'
+            });
+            break;
+        case 'false':
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-question',
+                markerColor: 'red',
+                shape: 'square',
+                prefix: 'fa'
+            });
+            break;
+        default:
+            customMarker = L.ExtraMarkers.icon({
+                icon: 'fa-info',
+                markerColor: 'red',
+                shape: 'square',
+                prefix: 'fa'
+            });
+        }
+        var marker = new L.Marker(latlng, {icon: customMarker});
+        marker.bindPopup('<div class="modal-header text-center"><h5 class="modal-title w-100 font-weight-bold">' +
+            request.Name +
+            '</h5></div>' +
+            '<div class="modal-body mx-3"><div class="md-form mb-5">' +
+            request.Notes +
+            '</div></div>' +
+            '<div class="modal-footer mx-3"> Contact: </br>' +
+            request.Phone + '</br>' + request.Email +
+            '</div>');
+        coronaMap.addLayer(marker);
+    });
+
+  
+
+    var dataToSend;
+    //deal with help request
+    function submitRequestFunct() {
+        coronaMap.on('click', addRequestMarker);
+    };
+    function addRequestMarker(e) {
+        var customMarker = L.ExtraMarkers.icon({
+            icon: 'fa-question',
+            markerColor: 'red',
+            shape: 'square',
+            prefix: 'fa'
+        });
+        var marker = new L.Marker(e.latlng, { icon: customMarker });
+        var jsonData = serializeObject(dataToSend);
+        marker.bindPopup('<div class="modal-header text-center"><h5 class="modal-title w-100 font-weight-bold">' +
+            jsonData["HelpRequest.Name"] +
+            '</h5></div>' +
+            '<div class="modal-body mx-3"><div class="md-form mb-5">' +
+            jsonData["HelpRequest.Notes"] +
+            '</div></div>' +
+            '<div class="modal-footer mx-3"> Contact: </br>' +
+            jsonData["HelpRequest.Phone"] + '</br>' + jsonData["HelpRequest.Email"] +
+            '</div>');
+        marker.addTo(coronaMap);
+        coronaMap.off('click', addRequestMarker);
+        var helpData = {
+            "Name": jsonData["HelpRequest.Name"],
+            "Email": jsonData["HelpRequest.Email"],
+            "Phone": jsonData["HelpRequest.Phone"],
+            "Notes": jsonData["HelpRequest.Notes"],
+            "Latitude": e.latlng.lat,
+            "Longitude": e.latlng.lng,
+            "Category": 3,
+            "IsUrgent": false,
+            "IsAbleCollect": false
+        };
+        var urlData = '@Url.Action("SubmitRequest")';
+        $.post(urlData, helpData).done(function (data) {
+            alert("Request added successfully");
+        });
+        return false;
+    }
+    $("#submitHelpRequest").on('click', function (event) {
+        event.preventDefault();
+        var form = $(this).parents('.modal').find('form');
+        dataToSend = form.serializeArray();
+        $('#submitRequestInfo').modal('hide');
+        submitRequestFunct();
+    });
+
+
+    //deal with help offer 
+    function submitOfferFunct() {
+        coronaMap.on('click', addOfferMarker);
+    };
+    function addOfferMarker(e) {
+        var customMarker = L.ExtraMarkers.icon({
+            icon: 'fa-info',
+            markerColor: 'blue',
+            prefix: 'fa'
+        });
+        var marker = new L.Marker(e.latlng, { icon: customMarker });
+        var formattedData = serializeObject(dataToSend);
+        marker.bindPopup('<div class="modal-header text-center"><h5 class="modal-title w-100 font-weight-bold">' +
+            formattedData["HelpOffer.Name"] +
+            '</h5></div>' +
+            '<div class="modal-body mx-3"><div class="md-form mb-5">' +
+            formattedData["HelpOffer.Notes"]+
+            '</div></div>' +
+            '<div class="modal-footer mx-3"> Contact: </br>' +
+            formattedData["HelpOffer.Phone"] + '</br>' + formattedData["HelpOffer.Email"] +
+            '</div>');
+        marker.addTo(coronaMap);
+        coronaMap.off('click', addOfferMarker);
+        var offerData = {
+            "Name": formattedData["HelpOffer.Name"],
+            "Email": formattedData["HelpOffer.Email"],
+            "Phone": formattedData["HelpOffer.Phone"],
+            "Notes": formattedData["HelpOffer.Notes"],
+            "Latitude": e.latlng.lat,
+            "Longitude": e.latlng.lng,
+            "Category": 3,
+            "HaveDelivery": false,
+            "Location": "",
+            "WebAddress": formattedData["HelpOffer.WebAddress"]
+        };
+        var urlData = '@Url.Action("SubmitOffer")';
+        $.post(urlData, offerData).done(function (data) {
+            alert("Offer added successfully");
+        });
+        return false;
+    }
+    $("#submitOfferRequest").on('click', function (event) {
+        event.preventDefault();
+        var form = $(this).parents('.modal').find('form');
+        dataToSend = form.serializeArray();
+        $('#submitOfferInfo').modal('hide');
+        submitOfferFunct();
+    });
+
+    function serializeObject(data) {
+        var o = {};
+        $.each(data, function() {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+   
+
+    //var placeholderElement = $('#modal-placeholder');
+    //$('button[data-toggle="modalRequest"]').click(function (event) {
+    //    alert("in modal open");
+    //    placeholderElement.find('#submitHelp').modal('show');
+    //    //var url = $(this).data('url');
+    //    //$.get(url).done(function (data) {
+    //    //    placeholderElement .html(data);
+    //    //    placeholderElement.find('.modal').modal('show');
+    //    //});
+    //});
+    //$("#submitHelp").on('click', function (event) {
+    //    alert("in modal save");
+    //    event.preventDefault();
+    //    var form = $(this).parents('.modal').find('form');
+    //    //var actionUrl = form.attr('action');
+    //    dataToSend = form.serialize();
+    //    $('#submitInfo').modal('hide');
+
+    //    //$.post(actionUrl, dataToSend).done(function (data) {
+    //    //    alert("in modal post");
+    //    //    //placeholderElement.find('#submitHelp').modal('hide');
+    //    //});
+    //});
+
+    //$(document).ready(function () {
+    //    // Sets up click behavior on all button elements with the alert class
+    //    // that exist in the DOM when the instruction was executed
+    //    $("#askHelp").on("click", askHelpFunct);
+
+
+    //});
+ 
+</script>
